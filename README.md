@@ -247,11 +247,6 @@ This project is built with a **safety-first approach**:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Links
-
-- **Documentation**: [Full API Documentation](docs/)
-- **Issues**: [Report Issues](https://github.com/your-username/bengali-slang-translator/issues)
-- **Discussions**: [Community Discussions](https://github.com/your-username/bengali-slang-translator/discussions)
 
 ---
 
