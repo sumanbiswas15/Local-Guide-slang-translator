@@ -1,0 +1,297 @@
+// Property tests for translation engine core functionality
+// Feature: bengali-slang-translator, Property 1: Bangla Script Priority
+// Feature: bengali-slang-translator, Property 2: Complete Response Format
+// Feature: bengali-slang-translator, Property 4: Unknown Term Handling
+// Feature: bengali-slang-translator, Property 9: Proper User Addressing
+// Feature: bengali-slang-translator, Property 10: Bhaiya Correction Protocol
+
+import * as fc from 'fast-check';
+import { TranslationEngine } from '../services/TranslationEngine';
+import { LEXICON_DATA } from '../data/lexicon';
+import { SlangTerm, Region, RegionalContext, ToneStyle, SafetyLevel } from '../types';
+
+describe('TranslationEngine Core Functionality', () => {
+  let translationEngine: TranslationEngine;
+
+  beforeEach(() => {
+    translationEngine = new TranslationEngine();
+  });
+
+  // Property 1: Bangla Script Priority
+  // For any valid slang term in the lexicon, the formatted response should begin 
+  // with the Bangla script representation of that term.
+  test('Property 1: Valid terms should start response with Bangla script', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...LEXICON_DATA),
+        (term: SlangTerm) => {
+          const result = translationEngine.translateTerm(term.word);
+          
+          expect(result.isTermFound).toBe(true);
+          expect(result.term).not.toBeNull();
+          expect(result.formattedResponse).toBeDefined();
+          
+          // Response should start with Bangla script in bold markdown
+          const expectedStart = `**${term.banglaScript}**`;
+          expect(result.formattedResponse.startsWith(expectedStart)).toBe(true);
+          
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  // Property 2: Complete Response Format
+  // For any slang term query, the response should include meaning in English, 
+  // cultural usage, regional context, and safety classification in a consistent format.
+  test('Property 2: Responses should include all required information', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...LEXICON_DATA),
+        (term: SlangTerm) => {
+          const result = translationEngine.translateTerm(term.word);
+          
+          expect(result.isTermFound).toBe(true);
+          expect(result.formattedResponse).toBeDefined();
+          
+          const response = result.formattedResponse;
+          
+          // Should contain Bangla script
+          expect(response).toContain(term.banglaScript);
+          
+          // Should contain meaning
+          expect(response).toContain(term.meaning);
+          
+          // Should contain usage information
+          expect(response).toContain(term.usage);
+          
+          // Should contain cultural context
+          expect(response).toContain('Cultural Context');
+          expect(response).toContain(term.culturalContext);
+          
+          // Should contain safety level
+          expect(response).toContain('Safety Level');
+          expect(response).toContain(term.safetyLevel);
+          
+          // Should contain addressing term
+          const addressingTerms = ['Dada', 'Didi', 'Boss'];
+          const hasAddressing = addressingTerms.some(addr => response.includes(addr));
+          expect(hasAddressing).toBe(true);
+          
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  // Property 4: Unknown Term Handling
+  // For any term not in the lexicon, the response should indicate the term is unknown 
+  // while maintaining the Kiro persona.
+  test('Property 4: Unknown terms should be handled with persona', () => {
+    const unknownTerms = [
+      'xyzabc123',
+      'nonexistentword',
+      'fakeslang',
+      'notinlexicon',
+      'randomterm999'
+    ];
+
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...unknownTerms),
+        (unknownTerm: string) => {
+          const result = translationEngine.translateTerm(unknownTerm);
+          
+          expect(result.isTermFound).toBe(false);
+          expect(result.term).toBeNull();
+          expect(result.formattedResponse).toBeDefined();
+          
+          const response = result.formattedResponse;
+          
+          // Should indicate unknown status
+          expect(response.toLowerCase()).toContain('jani na');
+          
+          // Should maintain persona with addressing
+          const addressingTerms = ['Dada', 'Didi', 'Boss'];
+          const hasAddressing = addressingTerms.some(addr => response.includes(addr));
+          expect(hasAddressing).toBe(true);
+          
+          // Should suggest tea stall
+          expect(response.toLowerCase()).toContain('cha-er dokan');
+          
+          // Should be encouraging/helpful
+          expect(response.toLowerCase()).toContain('try');
+          
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  // Property 9: Proper User Addressing
+  // For any response generated by the system, it should contain at least one of 
+  // the proper addressing terms: "Dada", "Didi", or "Boss".
+  test('Property 9: All responses should contain proper addressing', () => {
+    fc.assert(
+      fc.property(
+        fc.oneof(
+          fc.constantFrom(...LEXICON_DATA.map(t => t.word)),
+          fc.constantFrom('unknown123', 'fakeslang', 'bhaiya test')
+        ),
+        (input: string) => {
+          const result = translationEngine.translateTerm(input);
+          
+          expect(result.formattedResponse).toBeDefined();
+          
+          const response = result.formattedResponse;
+          const addressingTerms = ['Dada', 'Didi', 'Boss'];
+          const hasAddressing = addressingTerms.some(addr => response.includes(addr));
+          
+          expect(hasAddressing).toBe(true);
+          
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  // Property 10: Bhaiya Correction Protocol
+  // For any input containing "Bhaiya", the response should include the correction text 
+  // "Boss, ekhane 'Dada' (দাদা) bolun, nahole lok e bhabbe apni tourist!"
+  test('Property 10: Bhaiya inputs should trigger correction', () => {
+    const bhaiyaInputs = [
+      'bhaiya',
+      'Bhaiya lyadh',
+      'fatafati bhaiya',
+      'BHAIYA test',
+      'bhaiya ki bolcho'
+    ];
+
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...bhaiyaInputs),
+        (bhaiyaInput: string) => {
+          const result = translationEngine.translateTerm(bhaiyaInput);
+          
+          expect(result.formattedResponse).toBeDefined();
+          
+          const response = result.formattedResponse;
+          const expectedCorrection = "Boss, ekhane 'Dada' (দাদা) bolun, nahole lok e bhabbe apni tourist!";
+          
+          expect(response).toContain(expectedCorrection);
+          
+          // Should have cultural note about correction
+          expect(result.culturalNotes.some(note => 
+            note.toLowerCase().includes('bhaiya correction')
+          )).toBe(true);
+          
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  test('Regional context should affect addressing terms', () => {
+    const kolkataContext: RegionalContext = {
+      region: Region.KOLKATA,
+      culturalMarkers: ['Lyadh', 'Adda'],
+      toneStyle: ToneStyle.LIGHT_WITTY,
+      safetyThreshold: SafetyLevel.SAFE_FRIENDLY
+    };
+
+    const term = LEXICON_DATA.find(t => t.region.includes(Region.KOLKATA));
+    if (term) {
+      const result = translationEngine.translateTerm(term.word, kolkataContext);
+      
+      expect(result.formattedResponse).toBeDefined();
+      
+      // Should contain appropriate addressing
+      const addressingTerms = ['Dada', 'Didi', 'Boss', 'Bhai'];
+      const hasAddressing = addressingTerms.some(addr => 
+        result.formattedResponse.includes(addr)
+      );
+      expect(hasAddressing).toBe(true);
+    }
+  });
+
+  test('Empty input should be handled gracefully', () => {
+    const emptyInputs = ['', '   ', '\t', '\n'];
+    
+    emptyInputs.forEach(input => {
+      const result = translationEngine.translateTerm(input);
+      
+      expect(result.isTermFound).toBe(false);
+      expect(result.term).toBeNull();
+      expect(result.formattedResponse).toBeDefined();
+      expect(result.formattedResponse.length).toBeGreaterThan(0);
+      
+      // Should contain addressing
+      const addressingTerms = ['Dada', 'Didi', 'Boss'];
+      const hasAddressing = addressingTerms.some(addr => 
+        result.formattedResponse.includes(addr)
+      );
+      expect(hasAddressing).toBe(true);
+    });
+  });
+
+  test('Safety warnings should be included for dangerous terms', () => {
+    const dangerousTerms = LEXICON_DATA.filter(term => 
+      term.safetyLevel === SafetyLevel.DO_NOT_USE
+    );
+
+    dangerousTerms.forEach(term => {
+      const result = translationEngine.translateTerm(term.word);
+      
+      expect(result.isTermFound).toBe(true);
+      expect(result.safetyWarning).toBeDefined();
+      
+      // Response should contain warning
+      expect(result.formattedResponse).toContain('⚠️');
+      expect(result.formattedResponse).toContain('be careful');
+    });
+  });
+
+  test('Safe terms should not have safety warnings', () => {
+    const safeTerms = LEXICON_DATA.filter(term => 
+      term.safetyLevel === SafetyLevel.SAFE_FRIENDLY
+    );
+
+    safeTerms.forEach(term => {
+      const result = translationEngine.translateTerm(term.word);
+      
+      expect(result.isTermFound).toBe(true);
+      expect(result.safetyWarning).toBeUndefined();
+      
+      // Response should not contain warning symbols
+      expect(result.formattedResponse).not.toContain('⚠️');
+      expect(result.formattedResponse).not.toContain('be careful');
+    });
+  });
+
+  test('formatResponse should return consistent structure', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...LEXICON_DATA),
+        (term: SlangTerm) => {
+          const result = translationEngine.translateTerm(term.word);
+          const formatted = translationEngine.formatResponse(result);
+          
+          expect(formatted.content).toBeDefined();
+          expect(formatted.culturalNotes).toBeDefined();
+          expect(Array.isArray(formatted.culturalNotes)).toBe(true);
+          
+          // Content should match the formatted response
+          expect(formatted.content).toBe(result.formattedResponse);
+          
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+});

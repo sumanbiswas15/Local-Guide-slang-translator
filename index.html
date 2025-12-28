@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ The Local Guide - Bengali Slang Translator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #slangInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #slangInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            padding: 8px 15px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .result-section {
+            padding: 30px;
+            min-height: 200px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .result-card.warning {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .result-card.safe {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .bengali-text {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .meaning {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .context {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 3px solid #ffa500;
+        }
+
+        .safety-label {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .safety-safe {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .safety-warning {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .examples {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+        }
+
+        .examples h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .region-selector {
+            margin-bottom: 15px;
+        }
+
+        .region-selector select {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .quick-actions {
+                justify-content: center;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ The Local Guide</h1>
+            <p>Bengali Slang Translator - Kiro, The Local Dada is ready to help!</p>
+        </div>
+
+        <div class="input-section">
+            <div class="region-selector">
+                <label for="regionSelect">Region: </label>
+                <select id="regionSelect">
+                    <option value="kolkata">Kolkata</option>
+                    <option value="bardhaman">Bardhaman</option>
+                    <option value="tarakeswar">Tarakeswar</option>
+                    <option value="hooghly">Hooghly</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="slangInput" 
+                    placeholder="Enter a Bengali slang term (e.g., lyadh, fatafati, kelane)"
+                    autocomplete="off"
+                >
+                <button class="btn btn-primary" onclick="translateTerm()">Translate</button>
+                <button class="btn btn-secondary" onclick="getRandomTerm()">Random</button>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="quickTranslate('lyadh')">lyadh</button>
+                <button class="quick-btn" onclick="quickTranslate('fatafati')">fatafati</button>
+                <button class="quick-btn" onclick="quickTranslate('adda')">adda</button>
+                <button class="quick-btn" onclick="quickTranslate('mayya')">mayya</button>
+                <button class="quick-btn" onclick="quickTranslate('aantel')">aantel</button>
+                <button class="quick-btn" onclick="showSafeTerms()">Safe Terms</button>
+                <button class="quick-btn" onclick="searchByMeaning()">Search by Meaning</button>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div style="text-align: center; color: #6c757d; padding: 40px;">
+                <h3>Welcome to The Local Guide!</h3>
+                <p>Enter a Bengali slang term above to get started, or try one of the quick examples.</p>
+                <div class="examples">
+                    <h4>Try these examples:</h4>
+                    <p><strong>Safe terms:</strong> lyadh, fatafati, adda, jhol</p>
+                    <p><strong>Regional terms:</strong> Change region and try different terms</p>
+                    <p><strong>Search:</strong> Use "Search by Meaning" to find terms by English meaning</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="web-translator.js"></script>
+    <script>
+        // Handle Enter key in input
+        document.getElementById('slangInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                translateTerm();
+            }
+        });
+
+        // Focus input on page load
+        window.onload = function() {
+            document.getElementById('slangInput').focus();
+        };
+    </script>
+</body>
+</html>
