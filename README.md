@@ -19,10 +19,10 @@
 ## 🖥️ Web Interface
 
 ### Main Interface
-![Web Interface](Screenshot%202025-12-28%20170845.png)
+![Translation Results](Screenshot%202025-12-28%20170927.png)
 
 ### Translation Results
-![Translation Results](Screenshot%202025-12-28%20170927.png)
+![Web Interface](Screenshot%202025-12-28%20170845.png)
 
 ### Safety Warnings
 ![Safety Warnings](Screenshot%202025-12-28%20171105.png)
